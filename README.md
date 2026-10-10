@@ -20,6 +20,8 @@ tpi_gimnasio/
 
 ## Puesta en marcha
 
+> **Requiere Python 3.10 o superior** (el código usa la sintaxis `X | None`). El Python 3.9 que trae Xcode en macOS no sirve.
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
@@ -36,6 +38,41 @@ uvicorn main:app --reload
 
 Al arrancar, la API crea las colecciones que falten **con su validador `$jsonSchema`** y los índices.
 Si una colección ya existe en Atlas, no la toca.
+
+### Puesta en marcha en macOS
+
+En macOS el comando `python` suele no existir: usá `python3`.
+
+```bash
+# 1. Instalar Python 3.10+ con Homebrew si no lo tenés (el de Xcode es 3.9 y falla)
+brew install python
+
+# 2. Entrar al proyecto y crear el entorno virtual
+cd db2_tpi
+/opt/homebrew/bin/python3 -m venv .venv   # usa el de Homebrew, no /usr/bin/python3
+source .venv/bin/activate
+
+# 3. Instalar dependencias
+pip install -r requirements.txt
+
+# 4. Configurar variables de entorno
+cp .env.example .env
+nano .env                          # MONGO_URI (con tu usuario/password de Atlas) y DB_NAME
+
+# 5. Levantar la API
+uvicorn main:app --reload
+```
+
+Para abrir el Swagger directamente desde la terminal: `open http://127.0.0.1:8000/docs`
+
+Para correr los tests:
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+Si al instalar aparece un error de certificados SSL (`CERTIFICATE_VERIFY_FAILED`) con Python instalado desde python.org, ejecutá `/Applications/Python\ 3.x/Install\ Certificates.command` (ajustá la versión).
 
 ### Si no conecta
 En Atlas → **Network Access** tiene que estar habilitada tu IP actual (o `0.0.0.0/0` solo para pruebas).
