@@ -1,0 +1,1622 @@
+{
+  "info": {
+    "name": "TPI Gimnasio - API (MongoDB Atlas)",
+    "description": "Pruebas del CRUD con baja lógica de socios, clases y reservas.\n\nCómo usarla: levantá la API (`uvicorn main:app --reload`), importá esta colección y ejecutala completa con 'Run collection' (las carpetas están ordenadas: cada una usa los ids que guarda la anterior). Cambiá la variable `base_url` si la API corre en otro host o puerto.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Sistema",
+      "item": [
+        {
+          "name": "Health (API + conexión a MongoDB)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"status ok\", function () { pm.expect(pm.response.json().status).to.equal(\"ok\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1. Socios",
+      "item": [
+        {
+          "name": "CREATE - Crear socio A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/socios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "socios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dni\": \"{{dni_a}}\",\n  \"nombre\": \"Lucía\",\n  \"apellido\": \"Fernández\",\n  \"email\": \"lucía.fernández@example.com\",\n  \"telefono\": \"3511234567\",\n  \"membresia\": {\n    \"plan\": \"MENSUAL\",\n    \"precio\": 25000\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"dni_a\", String(Math.floor(10000000 + Math.random() * 89999999)));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Nace activo y sin fechaBaja\", function () {",
+                  "  const s = pm.response.json();",
+                  "  pm.expect(s.activo).to.equal(true);",
+                  "  pm.expect(s.fechaBaja).to.equal(null);",
+                  "  pm.expect(s.fechaAlta).to.be.a(\"string\");",
+                  "});",
+                  "pm.collectionVariables.set(\"socio_id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CREATE - Crear socio B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/socios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "socios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dni\": \"{{dni_b}}\",\n  \"nombre\": \"Mateo\",\n  \"apellido\": \"Ruiz\",\n  \"email\": \"mateo.ruiz@example.com\",\n  \"telefono\": \"3511234567\",\n  \"membresia\": {\n    \"plan\": \"MENSUAL\",\n    \"precio\": 25000\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"dni_b\", String(Math.floor(10000000 + Math.random() * 89999999)));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set(\"socio2_id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CREATE - DNI duplicado (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/socios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "socios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dni\": \"{{dni_a}}\",\n  \"nombre\": \"Otra\",\n  \"apellido\": \"Persona\",\n  \"email\": \"otra.persona@example.com\",\n  \"telefono\": \"3511234567\",\n  \"membresia\": {\n    \"plan\": \"MENSUAL\",\n    \"precio\": 25000\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CREATE - Datos inválidos: email mal formado (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/socios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "socios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dni\": \"{{dni_a}}\",\n  \"nombre\": \"Test\",\n  \"apellido\": \"Invalido\",\n  \"email\": \"esto-no-es-un-email\",\n  \"telefono\": \"3511234567\",\n  \"membresia\": {\n    \"plan\": \"MENSUAL\",\n    \"precio\": 25000\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 422\", function () { pm.response.to.have.status(422); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "READ - Listar socios activos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/socios?skip=0&limit=50",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "socios"
+              ],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"El listado incluye socio_id\", function () {",
+                  "  const ids = pm.response.json().map(function (x) { return x.id; });",
+                  "  pm.expect(ids.includes(pm.collectionVariables.get(\"socio_id\"))).to.equal(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "READ - Obtener socio por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/socios/{{socio_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "socios",
+                "{{socio_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Es el socio pedido\", function () { pm.expect(pm.response.json().id).to.equal(pm.collectionVariables.get(\"socio_id\")); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "READ - Id con formato inválido (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/socios/abc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "socios",
+                "abc"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UPDATE - Modificar teléfono y plan (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/socios/{{socio_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "socios",
+                "{{socio_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telefono\": \"3515559999\",\n  \"membresia\": {\n    \"plan\": \"TRIMESTRAL\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Cambió lo enviado y el resto quedó igual\", function () {",
+                  "  const s = pm.response.json();",
+                  "  pm.expect(s.telefono).to.equal(\"3515559999\");",
+                  "  pm.expect(s.membresia.plan).to.equal(\"TRIMESTRAL\");",
+                  "  pm.expect(s.membresia.precio).to.equal(25000);",
+                  "  pm.expect(s.nombre).to.equal(\"Lucía\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UPDATE - Sin campos (400)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/socios/{{socio_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "socios",
+                "{{socio_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UPDATE - Intentar cambiar 'activo' desde afuera (422)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/socios/{{socio_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "socios",
+                "{{socio_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 422\", function () { pm.response.to.have.status(422); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Clases",
+      "item": [
+        {
+          "name": "CREATE - Crear clase (cupo 1)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clases",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clases"
+              ]
+            },
+            "description": "Una clase es UNA ocurrencia real: si hay boxeo hoy y mañana, son dos clases. fechaAlta la pone el servidor.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Boxeo\",\n  \"instructor\": {\n    \"nombre\": \"Martín\",\n    \"apellido\": \"Gómez\",\n    \"especialidad\": \"Boxeo\"\n  },\n  \"cupoMaximo\": 1,\n  \"sala\": \"Sala 1\",\n  \"fechaInicio\": \"{{fecha_inicio}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Inicio de la clase: dentro de 7 días, a hora en punto (UTC).",
+                  "const inicio = new Date(Date.now() + 7 * 24 * 3600 * 1000);",
+                  "inicio.setUTCMinutes(0, 0, 0);",
+                  "pm.collectionVariables.set(\"fecha_inicio\", inicio.toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Tiene fechaAlta y fechaInicio, y no tiene horarios\", function () {",
+                  "  const c = pm.response.json();",
+                  "  pm.expect(c.fechaAlta).to.be.a(\"string\");",
+                  "  pm.expect(c.fechaInicio).to.be.a(\"string\");",
+                  "  pm.expect(c).to.not.have.property(\"horarios\");",
+                  "  pm.expect(c.activo).to.equal(true);",
+                  "});",
+                  "pm.collectionVariables.set(\"clase_id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CREATE - Sin fechaInicio (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clases",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clases"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Yoga\",\n  \"instructor\": {\n    \"nombre\": \"Ana\",\n    \"apellido\": \"Paz\"\n  },\n  \"cupoMaximo\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 422\", function () { pm.response.to.have.status(422); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "READ - Listar clases activas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clases",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clases"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"El listado incluye clase_id\", function () {",
+                  "  const ids = pm.response.json().map(function (x) { return x.id; });",
+                  "  pm.expect(ids.includes(pm.collectionVariables.get(\"clase_id\"))).to.equal(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "READ - Obtener clase por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clases/{{clase_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clases",
+                "{{clase_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UPDATE - Cambiar sala y especialidad del instructor (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clases/{{clase_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clases",
+                "{{clase_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sala\": \"Sala 2\",\n  \"instructor\": {\n    \"especialidad\": \"Kickboxing\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Se modificó solo lo enviado\", function () {",
+                  "  const c = pm.response.json();",
+                  "  pm.expect(c.sala).to.equal(\"Sala 2\");",
+                  "  pm.expect(c.instructor.especialidad).to.equal(\"Kickboxing\");",
+                  "  pm.expect(c.instructor.nombre).to.equal(\"Martín\");",
+                  "  pm.expect(c.cupoMaximo).to.equal(1);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Reservas",
+      "item": [
+        {
+          "name": "CREATE - Reservar con socio A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reservas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"socioId\": \"{{socio_id}}\",\n  \"claseId\": \"{{clase_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Nace CONFIRMADA y activa\", function () {",
+                  "  const r = pm.response.json();",
+                  "  pm.expect(r.estado).to.equal(\"CONFIRMADA\");",
+                  "  pm.expect(r.activo).to.equal(true);",
+                  "});",
+                  "pm.collectionVariables.set(\"reserva_id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CREATE - Misma reserva otra vez (409 duplicada)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reservas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"socioId\": \"{{socio_id}}\",\n  \"claseId\": \"{{clase_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CREATE - Socio B sin cupo (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reservas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"socioId\": \"{{socio2_id}}\",\n  \"claseId\": \"{{clase_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", function () { pm.response.to.have.status(409); });",
+                  "pm.test(\"Informa falta de cupo\", function () { pm.expect(pm.response.json().detail).to.include(\"cupo\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CREATE - Socio inexistente (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reservas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"socioId\": \"000000000000000000000000\",\n  \"claseId\": \"{{clase_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 422\", function () { pm.response.to.have.status(422); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "READ - Reservas del socio A (filtro socioId)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reservas?socioId={{socio_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservas"
+              ],
+              "query": [
+                {
+                  "key": "socioId",
+                  "value": "{{socio_id}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"El listado incluye reserva_id\", function () {",
+                  "  const ids = pm.response.json().map(function (x) { return x.id; });",
+                  "  pm.expect(ids.includes(pm.collectionVariables.get(\"reserva_id\"))).to.equal(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "READ - Obtener reserva por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reservas/{{reserva_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservas",
+                "{{reserva_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UPDATE - Cancelar reserva (PATCH estado=CANCELADA)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reservas/{{reserva_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservas",
+                "{{reserva_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"CANCELADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Quedó CANCELADA\", function () { pm.expect(pm.response.json().estado).to.equal(\"CANCELADA\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CREATE - Socio B reserva (el cupo se liberó)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reservas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"socioId\": \"{{socio2_id}}\",\n  \"claseId\": \"{{clase_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set(\"reserva2_id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UPDATE - Reactivar la cancelada sin cupo (409)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reservas/{{reserva_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservas",
+                "{{reserva_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"CONFIRMADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CREATE - Enviar fechaClase ya no está permitido (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reservas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservas"
+              ]
+            },
+            "description": "La reserva solo referencia a la clase (claseId); la fecha ya vive en clase.fechaInicio.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"socioId\": \"{{socio_id}}\",\n  \"claseId\": \"{{clase_id}}\",\n  \"fechaClase\": \"2026-10-20T22:00:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 422\", function () { pm.response.to.have.status(422); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Bajas lógicas (DELETE)",
+      "item": [
+        {
+          "name": "DELETE - Baja de reserva A",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reservas/{{reserva_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservas",
+                "{{reserva_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Baja lógica: activo=false y fechaBaja informada\", function () {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.activo).to.equal(false);",
+                  "  pm.expect(b.fechaBaja).to.not.equal(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE - Baja de reserva B",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reservas/{{reserva2_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservas",
+                "{{reserva2_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Baja lógica: activo=false y fechaBaja informada\", function () {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.activo).to.equal(false);",
+                  "  pm.expect(b.fechaBaja).to.not.equal(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE - Baja de clase",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clases/{{clase_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clases",
+                "{{clase_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Baja lógica: activo=false y fechaBaja informada\", function () {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.activo).to.equal(false);",
+                  "  pm.expect(b.fechaBaja).to.not.equal(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE - Baja de socio A",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/socios/{{socio_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "socios",
+                "{{socio_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Baja lógica: activo=false y fechaBaja informada\", function () {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.activo).to.equal(false);",
+                  "  pm.expect(b.fechaBaja).to.not.equal(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE - Baja de socio B",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/socios/{{socio2_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "socios",
+                "{{socio2_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Baja lógica: activo=false y fechaBaja informada\", function () {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.activo).to.equal(false);",
+                  "  pm.expect(b.fechaBaja).to.not.equal(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "El documento NO se borra: queda en la base con activo=false y fechaBaja. Se puede comprobar en Atlas (Browse Collections)."
+    },
+    {
+      "name": "5. Verificar baja lógica (nada de lo dado de baja se lista)",
+      "item": [
+        {
+          "name": "Socio dado de baja: GET por id (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/socios/{{socio_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "socios",
+                "{{socio_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Socios: el listado ya no los incluye",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/socios?limit=200",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "socios"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "200"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"El listado NO incluye socio_id\", function () {",
+                  "  const ids = pm.response.json().map(function (x) { return x.id; });",
+                  "  pm.expect(ids.includes(pm.collectionVariables.get(\"socio_id\"))).to.equal(false);",
+                  "});",
+                  "pm.test(\"El listado NO incluye socio2_id\", function () {",
+                  "  const ids = pm.response.json().map(function (x) { return x.id; });",
+                  "  pm.expect(ids.includes(pm.collectionVariables.get(\"socio2_id\"))).to.equal(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clase dada de baja: GET por id (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clases/{{clase_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clases",
+                "{{clase_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clases: el listado ya no la incluye",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clases?limit=200",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clases"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "200"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"El listado NO incluye clase_id\", function () {",
+                  "  const ids = pm.response.json().map(function (x) { return x.id; });",
+                  "  pm.expect(ids.includes(pm.collectionVariables.get(\"clase_id\"))).to.equal(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reserva dada de baja: GET por id (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reservas/{{reserva_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservas",
+                "{{reserva_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reservas: el listado ya no las incluye",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reservas?limit=200",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservas"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "200"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"El listado NO incluye reserva_id\", function () {",
+                  "  const ids = pm.response.json().map(function (x) { return x.id; });",
+                  "  pm.expect(ids.includes(pm.collectionVariables.get(\"reserva_id\"))).to.equal(false);",
+                  "});",
+                  "pm.test(\"El listado NO incluye reserva2_id\", function () {",
+                  "  const ids = pm.response.json().map(function (x) { return x.id; });",
+                  "  pm.expect(ids.includes(pm.collectionVariables.get(\"reserva2_id\"))).to.equal(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modificar un socio dado de baja (404)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/socios/{{socio_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "socios",
+                "{{socio_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Nuevo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Dar de baja de nuevo (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/socios/{{socio_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "socios",
+                "{{socio_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reservar con socio dado de baja (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reservas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"socioId\": \"{{socio_id}}\",\n  \"claseId\": \"{{clase_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 422\", function () { pm.response.to.have.status(422); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "socio_id",
+      "value": ""
+    },
+    {
+      "key": "socio2_id",
+      "value": ""
+    },
+    {
+      "key": "clase_id",
+      "value": ""
+    },
+    {
+      "key": "reserva_id",
+      "value": ""
+    },
+    {
+      "key": "reserva2_id",
+      "value": ""
+    },
+    {
+      "key": "dni_a",
+      "value": ""
+    },
+    {
+      "key": "dni_b",
+      "value": ""
+    },
+    {
+      "key": "fecha_inicio",
+      "value": ""
+    }
+  ]
+}
