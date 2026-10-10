@@ -1,7 +1,7 @@
 """Pruebas del ciclo CREATE / READ / UPDATE / DELETE (baja lógica) y de las reglas de reservas."""
 from datetime import datetime
 
-from bson import ObjectId
+from bson import Decimal128, ObjectId
 
 from app.validators import VALIDATORS
 
@@ -91,6 +91,17 @@ def test_socio_crud_con_baja_logica(client, db):
     # ...pero el documento sigue físicamente en la colección
     crudo = db.socios.find_one({"_id": ObjectId(socio["id"])})
     assert crudo is not None and crudo["activo"] is False and crudo["fechaBaja"] is not None
+
+
+def test_socio_con_precio_decimal128_se_lista(client, db):
+    # Datos cargados desde mongosh con NumberDecimal llegan como Decimal128, no como float
+    db.socios.insert_one({
+        "dni": "30999888", "nombre": "Ana", "apellido": "Paz", "email": "ana@example.com",
+        "membresia": {"plan": "ANUAL", "precio": Decimal128("45000.00")}, "activo": True, "fechaBaja": None,
+    })
+    r = client.get("/socios", params={"skip": 0, "limit": 50})
+    assert r.status_code == 200, r.text
+    assert r.json()[0]["membresia"]["precio"] == 45000.0
 
 
 def test_socio_dni_duplicado_y_reuso_tras_baja(client):

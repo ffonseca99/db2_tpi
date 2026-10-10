@@ -1,7 +1,7 @@
 """Funciones auxiliares compartidas por las capas."""
 from datetime import datetime, timezone
 
-from bson import ObjectId
+from bson import Decimal128, ObjectId
 from bson.errors import InvalidId
 
 from app.exceptions import BadRequestError
@@ -22,9 +22,12 @@ def to_object_id(valor: str, campo: str = "id") -> ObjectId:
 
 
 def serialize(valor):
-    """Convierte un documento de Mongo a algo serializable: _id -> id, ObjectId -> str, fechas con UTC."""
+    """Convierte un documento de Mongo a algo serializable: _id -> id, ObjectId -> str,
+    Decimal128 -> float, fechas con UTC."""
     if isinstance(valor, ObjectId):
         return str(valor)
+    if isinstance(valor, Decimal128):
+        return float(valor.to_decimal())
     if isinstance(valor, datetime):
         return valor.replace(tzinfo=timezone.utc) if valor.tzinfo is None else valor
     if isinstance(valor, dict):
