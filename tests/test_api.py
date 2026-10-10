@@ -16,7 +16,7 @@ SOCIO = {
 }
 CLASE = {
     "nombre": "Boxeo",
-    "instructor": {"nombre": "Martín", "apellido": "Gómez"},
+    "instructor": {"nombre": "Martín Gómez"},
     "cupoMaximo": 1,
     "fechaInicio": INICIO,
 }
@@ -74,7 +74,7 @@ def test_socio_crud_con_baja_logica(client, db):
     assert r.status_code == 200
     cuerpo = r.json()
     assert cuerpo["telefono"] == "3515551234"
-    assert cuerpo["membresia"] == {"plan": "ANUAL", "precio": 25000.0, "fechaVencimiento": None}
+    assert cuerpo["membresia"] == {"plan": "ANUAL", "precio": 25000.0, "fechaInicio": None, "fechaVencimiento": None}
     assert cuerpo["nombre"] == "Lucía"
 
     # DELETE = baja lógica
@@ -142,7 +142,7 @@ def test_clase_crud_con_baja_logica(client, db):
     assert r.status_code == 200
     cuerpo = r.json()
     assert cuerpo["sala"] == "Sala 2" and cuerpo["fechaInicio"].startswith("2026-10-21T22:00:00")
-    assert cuerpo["instructor"] == {"nombre": "Martín", "apellido": "Gómez", "especialidad": "Crossfit"}
+    assert cuerpo["instructor"] == {"nombre": "Martín Gómez", "especialidad": "Crossfit"}
     assert cuerpo["fechaAlta"] == clase["fechaAlta"]  # fechaAlta no cambia
 
     assert client.delete(f"/clases/{clase['id']}").json()["activo"] is False

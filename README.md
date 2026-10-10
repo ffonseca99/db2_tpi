@@ -132,7 +132,7 @@ Usan una base simulada (`mongomock`): **no tocan tu clúster**.
 ## Decisiones y supuestos (revisalos)
 - **Nombre de la base:** `DB_NAME` vale `gimnasio` por defecto. Si tus colecciones están en otra base, cambialo en `.env`.
 - **Documentos embebidos:** tu modelo solo dice «documento embebido», así que definí:
-  `membresia {plan, precio?, fechaVencimiento?}` e `instructor {nombre, apellido, especialidad?}`.
+  `membresia {plan, precio?, fechaInicio?, fechaVencimiento?}` e `instructor {nombre, especialidad?}`.
   Si tenés otros campos, se ajustan en `app/schemas/`.
 - **`fechaInicio` obligatorio:** lo agregué a `required` del validador de `clases` (y de la API). `fechaAlta` no es obligatorio en el validador, igual que en `socios`.
 - **Sin validación de fechas:** se puede reservar una clase que ya empezó o crear una clase con `fechaInicio` en el pasado. Si querés bloquearlo, es una regla de una línea en los servicios.

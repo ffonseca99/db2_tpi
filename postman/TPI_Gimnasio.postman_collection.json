@@ -489,7 +489,7 @@
             "description": "Una clase es UNA ocurrencia real: si hay boxeo hoy y mañana, son dos clases. fechaAlta la pone el servidor.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Boxeo\",\n  \"instructor\": {\n    \"nombre\": \"Martín\",\n    \"apellido\": \"Gómez\",\n    \"especialidad\": \"Boxeo\"\n  },\n  \"cupoMaximo\": 1,\n  \"sala\": \"Sala 1\",\n  \"fechaInicio\": \"{{fecha_inicio}}\"\n}",
+              "raw": "{\n  \"nombre\": \"Boxeo\",\n  \"instructor\": {\n    \"nombre\": \"Martín Gómez\",\n    \"especialidad\": \"Boxeo\"\n  },\n  \"cupoMaximo\": 1,\n  \"sala\": \"Sala 1\",\n  \"fechaInicio\": \"{{fecha_inicio}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -550,7 +550,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Yoga\",\n  \"instructor\": {\n    \"nombre\": \"Ana\",\n    \"apellido\": \"Paz\"\n  },\n  \"cupoMaximo\": 10\n}",
+              "raw": "{\n  \"nombre\": \"Yoga\",\n  \"instructor\": {\n    \"nombre\": \"Ana Paz\"\n  },\n  \"cupoMaximo\": 10\n}",
               "options": {
                 "raw": {
                   "language": "json"
